@@ -1,6 +1,3 @@
-//
-// Created by stela on 3/14/21.
-//
 #include "hashmap.h"
 #include <string.h>
 #define _hashCode 26
@@ -50,14 +47,24 @@ int getKeys(HashMap* head, char** key_vector, int index){
     if(head == NULL)
         return 0;
     while(head != NULL){
-        key_vector[index] = (char*)malloc((strlen(head->key)+1) * sizeof(char ));
+        key_vector[index] = (char*)calloc((strlen(head->key) + 1 ), sizeof(char));
         strcpy(key_vector[index], head->key);
         index++;
         head = head->next;
     }
     return index;
 }
-//void deleteNodeMap(HashMap** head, HashMap* node){
+char* findInMap(HashMap** head, char* key){
+    HashMap* aux = (*head);
+    while(aux != NULL){
+        if(strcmp(key, aux->key) == 0){
+            return aux->value;
+        }
+        aux = aux->next;
+    }
+    return NULL;
+}
+/*void deleteNodeMap(HashMap** head, HashMap* node){
 //    HashMap* aux = (HashMap*)malloc(sizeof(HashMap));
 //    HashMap* map = (*head);
 //    aux = NULL;
@@ -75,4 +82,4 @@ int getKeys(HashMap* head, char** key_vector, int index){
 //            }
 //        }
 //    }
-//}
+}*/

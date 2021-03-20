@@ -1,6 +1,7 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
-#include <dirent.h>
+//#include <dirent.h>
 #include "hashmap.h"
 #define MapSize 28
 #define TEXTBUFFERSIZE 100

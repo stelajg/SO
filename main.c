@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include "hashmap.h"
-#define MapSize 28
-#define TEXTBUFFERSIZE 100
+#include "main.h"
 
 void addArgsMap(HashMap** map, char* symbol_mapping, int pos, int* map_size){
     char *equal_symbol = strchr(symbol_mapping, '=');
@@ -266,7 +262,59 @@ void helperAnalyzerIFDEF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap
     getline(text,&size,(*fd_src));
 }
 
-void analyzerFileInput(FILE* fd_src, FILE* fd_dst,HashMap**map, int map_size){
+void searchInDirectory(char* dir_name, char* fileName){
+    DIR *dir;
+    dir = opendir(dir_name);
+    struct dirent *contents;
+    int files = 0;
+    if(dir == NULL){
+        return;
+    }
+    while( (contents=readdir(dir)) )
+    {
+        files++;
+        if(contents->d_type == DT_DIR){
+            searchInDirectory(contents->d_name, fileName);
+        }else if(contents->d_type == DT_REG){
+            if(strcmp(contents->d_name, fileName) == 0){
+                /*nu stiu cum sa fac, sa deschid fisierul si sa-l trimit printr-o variabila
+                 * dar folosesc recursivitate,nu stiu cum o sa iasa*/
+            }
+        }
+    }
+    closedir(dir);
+}
+
+void helperAnalyzerInclude(FILE* fd_dst, char* text, char* dir_address,HashMap**map, int map_size){
+    char * pch;
+    pch = strtok (text," \n");
+    pch = strtok (NULL, " \n");
+    int k = strlen(pch);
+    char* fileName = (char*)calloc(strlen(pch), sizeof(char ));
+    strcpy(fileName, pch + 1);
+    fileName[strlen(pch) - 2] = '\0';
+    FILE* fd = fopen(fileName,"r+");
+    if(fd == NULL){
+        if(dir_address == NULL){
+            exit(1);
+        }else{
+            size_t aux_size = strlen(fileName) + strlen(dir_address) + 1;
+            char* aux = (char*)calloc(aux_size, sizeof(char ));
+            strcpy(aux,dir_address);
+            strcat(aux,fileName);
+            aux[aux_size - 1] = '\0';
+            fd = fopen(aux,"r+");
+            free(aux);
+            if(fd == NULL){
+                exit(1);
+            }
+        }
+    }
+    analyzerFileInput(fd,fd_dst,dir_address,map,map_size);
+    free(fileName);
+    fclose(fd);
+}
+void analyzerFileInput(FILE* fd_src, FILE* fd_dst, char * dir_address,HashMap**map, int map_size){
     char** keys = NULL;
     int readKeys = 0;
     int readUndef = 0;
@@ -283,7 +331,10 @@ void analyzerFileInput(FILE* fd_src, FILE* fd_dst,HashMap**map, int map_size){
         }
         if(feof(fd_src))
             break;
-        if(strstr(text, "#ifndef") != NULL){
+        if(strstr(text, "#include") != NULL){
+            helperAnalyzerInclude(fd_dst,text,dir_address,map,map_size);
+        }
+        else if(strstr(text, "#ifndef") != NULL){
             helperAnalyzerIFDEF_ENDIF(&fd_src,fd_dst,&text,map,keys,map_size,1);
         }else if(strstr(text, "#ifdef") != NULL){
             helperAnalyzerIFDEF_ENDIF(&fd_src,fd_dst,&text,map,keys,map_size,0);
@@ -315,19 +366,16 @@ void analyzerFileInput(FILE* fd_src, FILE* fd_dst,HashMap**map, int map_size){
         free(text);
     free(keys);
 }
+
 int main(int argc, char** argv) {
     FILE* fd_src;
     FILE* fd_dst;
     char *fd_src_address = NULL;
     char *fd_drc_address = NULL;
     char *dir_address = NULL;
-    char* text = NULL;
-    size_t size = 0;
-    size_t read;
     int i;
     HashMap** map = (HashMap**)calloc(MapSize, sizeof(HashMap*));
     int map_size = 0;
-    char** keys = NULL;
     parseInputArgs(argv, argc, map, &fd_src_address, &fd_drc_address, &dir_address, &map_size);
     if(strcmp(fd_drc_address, "STDOUT") == 0){
         fd_dst = stdout;
@@ -337,7 +385,6 @@ int main(int argc, char** argv) {
             exit(-1);
         }
     }
-    int isInStdin = 0;
     if(strcmp(fd_src_address, "STDIN") == 0){
         fd_src = stdin;
     }else {
@@ -346,11 +393,11 @@ int main(int argc, char** argv) {
             exit(-1);
         }
     }
-    char test[60];
+    char test[10];
 
-    if( fgets (test, 60, fd_src) != NULL ) {
+    if( fgets (test, 10, fd_src) != NULL ) {
         rewind(fd_src);
-        analyzerFileInput(fd_src,fd_dst,map,map_size);
+        analyzerFileInput(fd_src,fd_dst,dir_address,map,map_size);
     }
 
     if(fd_src != NULL)

@@ -1,7 +1,16 @@
-build: so-cpp
+CFLAGS = /MD
 
-so-cpp: hashmap.c main.c
-	gcc -std=c89 hashmap.c main.c -o so-cpp
+build: so-cpp.exe
+
+so-cpp.exe: hashmap.obj main.obj
+	cl $(CFLAGS) /out:so-cpp.exe hashmap.obj main.obj
+
+main.obj: main.c main.h
+	cl $(CFLAGS) /c main.c
+
+hashmap.obj: hashmap.c hashmap.h
+	cl $(CFLAGS) /c hashmap.c
 
 clean:
-	rm -fr so-cpp
+	del *.obj
+	del so-cpp.exe

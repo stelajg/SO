@@ -5,15 +5,77 @@
 #define uppercaseSubs 65
 #define lowercaseSubs 97
 
-void insertMap(HashMap** map, int hashcode, char* key, char* value){
+char** splitInWord(char* text, int* numberOfWords){
+    int i = 0;
+    while (text[i] != '\0'){
+        if(text[i] == ' ')
+            (*numberOfWords)++;
+        i++;
+    }
+    char**result = (char **)calloc((*numberOfWords),sizeof(char *));
+    char *pch = strtok (text," ");
+    i = 0;
+    while(pch != NULL){
+        result[i] = (char *)calloc(strlen(pch) + 1,sizeof(char ));
+        strcpy(result[i],pch);
+        pch = strtok (NULL, " ");
+        i++;
+    }
+    return result;
+
+}
+char* helperInsertMap(HashMap** map, char* string_to_analyze){
+    char*result = NULL;
+    int number_words = 1;
+    char** array_words = NULL;
+    array_words = splitInWord(string_to_analyze,&number_words);
+    int i;
+    size_t resultSize = 0;
+    for(i = 0; i < number_words; i++){
+        int hashAux = hashFunction(array_words[i]);
+        if(hashAux != -1){
+            char* aux = findInMap(&map[hashAux], array_words[i]);
+            if(aux != NULL){
+                free(array_words[i]);
+                array_words[i] = (char *)calloc(strlen(aux) + 1,sizeof(char ));
+                strcpy(array_words[i], aux);
+            }
+        }
+        resultSize += strlen(array_words[i]) + 1;
+    }
+    result = (char *)calloc(resultSize,sizeof(char ));
+    for(i = 0; i < number_words; i++){
+        strcat(result, array_words[i]);
+        free(array_words[i]);
+        if(i < number_words -1){
+            strcat(result, " ");
+        }
+    }
+    free(array_words);
+    return result;
+}
+
+void insertMap(HashMap** map, HashMap** head, int hashcode, char* key, char* value){
     HashMap* new_node = (HashMap*)malloc(sizeof(HashMap));
     new_node->key = (char*)calloc((strlen(key) + 1),sizeof(char));
     strcpy(new_node->key, key);
-    new_node->value = (char*)calloc((strlen(value) + 1),sizeof(char));
-    strcpy(new_node->value, value);
+    char* aux = helperInsertMap(map, value);
+    new_node->value = (char*)calloc((strlen(aux) + 1),sizeof(char));
+    /*int hashAux = hashFunction(value);
+    char* aux = NULL;
+    if(hashAux != -1)
+        aux = findInMap(&map[hashAux], value);
+    if( aux != NULL && hashAux != -1){
+        strcpy(new_node->value, aux);
+    }else{
+        strcpy(new_node->value, value);
+    }
+     */
+    strcpy(new_node->value, aux);
+    free(aux);
     new_node->hashcode = hashcode;
-    new_node->next = *map;
-    *map = new_node;
+    new_node->next = *head;
+    *head = new_node;
 }
 void deleteMap(HashMap** head){
     HashMap* aux ;
@@ -43,16 +105,23 @@ int hashFunction(const char* key){
     return -1;
 }
 
-int getKeys(HashMap* head, char** key_vector, int index){
-    if(head == NULL)
-        return 0;
-    while(head != NULL){
-        key_vector[index] = (char*)calloc((strlen(head->key) + 1 ), sizeof(char));
-        strcpy(key_vector[index], head->key);
-        index++;
-        head = head->next;
+char** getKeys(HashMap** map, int mapSize, int numberOfNodes){
+    char** key_vector = (char**)calloc(numberOfNodes, sizeof(char*));
+    int i = 0;
+    int index = 0;
+    HashMap *head = NULL;
+    for(i = 0; i < mapSize; i++){
+        if(map[i] != NULL){
+           head = map[i];
+            while(head != NULL){
+                key_vector[index] = (char*)calloc((strlen(head->key) + 1), sizeof(char));
+                strcpy(key_vector[index], head->key);
+                index++;
+                head = head->next;
+            }
+        }
     }
-    return index;
+    return key_vector;
 }
 char* findInMap(HashMap** head, char* key){
     HashMap* aux = (*head);
@@ -64,22 +133,28 @@ char* findInMap(HashMap** head, char* key){
     }
     return NULL;
 }
-/*void deleteNodeMap(HashMap** head, HashMap* node){
-//    HashMap* aux = (HashMap*)malloc(sizeof(HashMap));
-//    HashMap* map = (*head);
-//    aux = NULL;
-//    aux->next = map;
-//    if(map == NULL){
-//        return;
-//    }
-//    while(map->next != NULL){
-//        if(strcmp(map->key, node->key) == 0){
-//            if(aux == NULL){
-//                HashMap* aux1 = map;
-//                (*map) = (*map)->next;
-//                aux1->next = NULL;
-//
-//            }
-//        }
-//    }
-}*/
+void deleteNode(HashMap** head, char* key){
+    HashMap *temp = *head, *prev;
+
+    if (temp != NULL && (strcmp(temp->key,key) == 0)) {
+        (*head) = temp->next;
+        free(temp->key);
+        free(temp->value);
+        free(temp);
+        return;
+    }
+
+    while (temp != NULL && (strcmp(temp->key,key) != 0)) {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    if (temp == NULL)
+        return;
+
+    prev->next = temp->next;
+
+    free(temp->key);
+    free(temp->value);
+    free(temp);
+}

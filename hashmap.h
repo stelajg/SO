@@ -11,8 +11,11 @@ typedef struct HashMap{
     struct HashMap* next;
 }HashMap;
 
-void insertMap(HashMap** map, int hashcode, char* key, char* value);
+char** splitInWord(char* text, int* numberOfWords);
+char* helperInsertMap(HashMap** map,char* string_to_analyze);
+void insertMap(HashMap** map, HashMap** head, int hashcode, char* key, char* value);
 void deleteMap(HashMap** head);
+void deleteNode(HashMap** head, char*key);
 char* findInMap(HashMap** head, char* key);
-int getKeys(HashMap* head, char** key_vector, int index);
+char** getKeys(HashMap** map, int mapSize, int numberOfNodes);
 int hashFunction(const char* key);

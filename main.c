@@ -82,6 +82,9 @@ void parseInputArgs(char** argv, int argc, HashMap** map, char** fd_src_address,
             wasS = 1;
             i++;
         } else{
+            if(wasO == 1){
+                exit(1);
+            }
             (*fd_drc_address) = (char *) calloc((strlen(argv[i]) + 1), sizeof(char));
             strcpy((*fd_drc_address), argv[i]);
             wasO = 1;
@@ -98,11 +101,42 @@ void parseInputArgs(char** argv, int argc, HashMap** map, char** fd_src_address,
     }
 }
 
-void helperAnalyzeFILEInput(HashMap** map, char* text, int* mapSize){
+void helperAnalyzeFILEInput(FILE* fd_src, HashMap** map, char* text, int* mapSize){
     /*pch = strtok (text," \n");
     pch = strtok (NULL, " \n");
     int hashcode = hashFunction(pch);
      */
+    /*aici trebuie de revizuit, poate sa alegi doar alphanumeri+simboluri, ai prea multe spatii,exercitiu 12*/
+    if(strchr(text, '\\') != NULL){
+        char**aux_text = (char**)calloc(2,sizeof(char*));
+        aux_text[0] = (char*)calloc(strlen(text) - 1,sizeof(char));
+        strncpy(aux_text[0], text, strlen(text) - 1);
+        aux_text[0][strlen(text) - 2] = '\0';
+        int i = 1;
+        size_t size = 0;
+        int size_aux_text = 2;
+        size_t new_string_size = strlen(aux_text[0]) + 1;
+        while(strchr(text, '\\') != NULL){
+            if(i == size_aux_text){
+                size_aux_text += 2;
+                aux_text = (char **)realloc(aux_text, sizeof(char *)*2);
+            }
+            getline(&text,&size,fd_src);
+            aux_text[i] = (char*)calloc(strlen(text) - 1,sizeof(char));
+            strncpy(aux_text[i], text, strlen(text) - 1);
+            aux_text[i][strlen(text) - 2] = '\0';
+            new_string_size += strlen(aux_text[i]);
+            i++;
+        }
+        free(text);
+        text = (char*)calloc(new_string_size, sizeof(char));
+        int j;
+        for(j = 0; j < i; j++){
+            strcat(text, aux_text[j]);
+            /*free(aux_text[j]);*/
+        }
+        free(aux_text);
+    }
     char* aux = strchr(text,' ');
     char* aux1 = strchr(aux + 1,' ');
     char* key = (char*)calloc((strlen(aux)- strlen(aux1) + 1), sizeof(char ));
@@ -139,6 +173,7 @@ void writeFILE(FILE* dst, HashMap** map, char**keys, char* text, int map_size){
         fprintf(dst, "%s",text);
     }
 }
+
 void deleteKeys(HashMap**map, char* text){
     char * pch;
     pch = strtok (text," \n");
@@ -146,8 +181,142 @@ void deleteKeys(HashMap**map, char* text){
     deleteNode(&map[hashFunction(pch)], pch);
 }
 
-void analyzerFileInput(FILE* fd_src, HashMap**map,){
+long int findIfExistsInMap(HashMap** map, char* text){
 
+}
+
+void helperAnalyzerIF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap** map, char** keys, int map_size){
+    char * pch;
+    pch = strtok ((*text)," \n");
+    pch = strtok (NULL, " \n");
+    char* cEnd;
+    long int if_var;
+    int hash = hashFunction(pch);
+    char* aux = NULL;
+    if(hash != -1)
+        aux = findInMap(&map[hashFunction(pch)], pch);
+    if(aux != NULL && hash != -1){
+        if_var = strtol(aux, &cEnd,10);
+    }else{
+        if_var = strtol(pch, &cEnd,10);
+    }
+    size_t size = 0;
+    free((*text));
+    getline(text,&size,(*fd_src));
+    int wasElse = 0;
+    while(strstr((*text), "#endif") == NULL){
+        if(if_var == 0 && strstr((*text), "#elif") != NULL){
+            pch = strtok ((*text)," \n");
+            pch = strtok (NULL, " \n");
+            hash = hashFunction(pch);
+            aux = NULL;
+            if(hash != -1)
+                aux = findInMap(&map[hashFunction(pch)], pch);
+            if(aux != NULL && hash != -1){
+                if_var = strtol(aux, &cEnd,10);
+            }else{
+                if_var = strtol(pch, &cEnd,10);
+            }
+        }else if(strstr((*text), "#else") != NULL){
+            wasElse = 1;
+        }else if(wasElse == 1 && if_var == 0){
+            writeFILE(fd_dst,map,keys,(*text), map_size);
+        }else if(if_var != 0 && wasElse == 0){
+            writeFILE(fd_dst,map,keys,(*text), map_size);
+        }
+        getline(text,&size,(*fd_src));
+    }
+    getline(text,&size,(*fd_src));
+}
+
+void helperAnalyzerIFDEF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap**map, char** keys, int map_size){
+    char * pch;
+    pch = strtok ((*text)," \n");
+    pch = strtok (NULL, " \n");
+    char* cEnd;
+    long int if_var;
+    int hash = hashFunction(pch);
+    char* aux = NULL;
+    if(hash != -1)
+        aux = findInMap(&map[hashFunction(pch)], pch);
+    if(aux != NULL && hash != -1){
+        if_var = strtol(aux, &cEnd,10);
+    }else{
+        if_var = strtol(pch, &cEnd,10);
+    }
+    size_t size = 0;
+    free((*text));
+    getline(text,&size,(*fd_src));
+    int wasElse = 0;
+    while(strstr((*text), "#endif") == NULL){
+        if(if_var == 0 && strstr((*text), "#elif") != NULL){
+            pch = strtok ((*text)," \n");
+            pch = strtok (NULL, " \n");
+            hash = hashFunction(pch);
+            aux = NULL;
+            if(hash != -1)
+                aux = findInMap(&map[hashFunction(pch)], pch);
+            if(aux != NULL && hash != -1){
+                if_var = strtol(aux, &cEnd,10);
+            }else{
+                if_var = strtol(pch, &cEnd,10);
+            }
+        }else if(strstr((*text), "#else") != NULL){
+            wasElse = 1;
+        }else if(wasElse == 1 && if_var == 0){
+            writeFILE(fd_dst,map,keys,(*text), map_size);
+        }else if(if_var != 0 && wasElse == 0){
+            writeFILE(fd_dst,map,keys,(*text), map_size);
+        }
+        getline(text,&size,(*fd_src));
+    }
+    getline(text,&size,(*fd_src));
+}
+
+void analyzerFileInput(FILE* fd_src, FILE* fd_dst,HashMap**map, int map_size){
+    char** keys = NULL;
+    int readKeys = 0;
+    int readUndef = 0;
+    int i;
+    char* text = NULL;
+    size_t size = 0;
+    size_t read;
+
+    while((read = getline(&text,&size,fd_src)) != - 1){
+        if(readUndef == 1){
+            readUndef = 0;
+        }
+        if(feof(fd_src))
+            break;
+        if(strstr(text, "#ifdef") != NULL){
+            helperAnalyzerIFDEF_ENDIF(&fd_src,fd_dst,&text,map,keys,map_size);
+        }
+        else if(strstr(text, "#define") != NULL){
+            helperAnalyzeFILEInput(fd_src, map, text, &map_size);
+        }else if(strstr(text, "#undef") != NULL){
+            deleteKeys(map,text);
+            for(i = 0; i < map_size; i++){
+                free(keys[i]);
+            }
+            free(keys);
+            keys = getKeys(map, MapSize, map_size);
+            map_size--;
+            readUndef = 1;
+        }else if(strstr(text, "#if") != NULL){
+            helperAnalyzerIF_ENDIF(&fd_src,fd_dst,&text,map,keys,map_size);
+        }else if(readKeys == 0){
+            readKeys = 1;
+            keys = getKeys(map, MapSize,map_size);
+        }
+        if(readKeys == 1 && readUndef == 0)
+            writeFILE(fd_dst,map,keys,text, map_size);
+    }
+    for(i = 0; i < map_size; i++){
+        free(keys[i]);
+    }
+    if(text != NULL)
+        free(text);
+    free(keys);
 }
 int main(int argc, char** argv) {
     FILE* fd_src;
@@ -179,42 +348,12 @@ int main(int argc, char** argv) {
             exit(-1);
         }
     }
-    int readKeys = 0;
-    int readUndef = 0;
-    while((read = getline(&text,&size,fd_src)) != - 1){
-        if(readUndef == 1){
-            readUndef = 0;
-        }
-        if(feof(fd_src))
-            break;
-        if(strstr(text, "#define") != NULL){
-            helperAnalyzeFILEInput(map, text, &map_size);
-        }else if(strstr(text, "#undef") != NULL){
-            deleteKeys(map,text);
-            for(i = 0; i < map_size; i++){
-                free(keys[i]);
-            }
-            free(keys);
-            keys = getKeys(map, MapSize, map_size);
-            map_size--;
-            readUndef = 1;
-        }else if(readKeys == 0){
-            readKeys = 1;
-            keys = getKeys(map, MapSize,map_size);
-        }
-        if(readKeys == 1 && readUndef ==0)
-            writeFILE(fd_dst,map,keys,text, map_size);
-    }
+    analyzerFileInput(fd_src,fd_dst,map,map_size);
     if(fd_src != NULL)
         fclose(fd_src);
     if(fd_dst != NULL)
         fclose(fd_dst);
-    for(i = 0; i < map_size; i++){
-        free(keys[i]);
-    }
-    free(keys);
-    if(text != NULL)
-        free(text);
+
     if(fd_src_address != NULL)
         free(fd_src_address);
     if(fd_drc_address != NULL)

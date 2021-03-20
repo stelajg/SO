@@ -59,20 +59,25 @@ void insertMap(HashMap** map, HashMap** head, int hashcode, char* key, char* val
     HashMap* new_node = (HashMap*)malloc(sizeof(HashMap));
     new_node->key = (char*)calloc((strlen(key) + 1),sizeof(char));
     strcpy(new_node->key, key);
-    char* aux = helperInsertMap(map, value);
-    new_node->value = (char*)calloc((strlen(aux) + 1),sizeof(char));
-    /*int hashAux = hashFunction(value);
-    char* aux = NULL;
-    if(hashAux != -1)
-        aux = findInMap(&map[hashAux], value);
-    if( aux != NULL && hashAux != -1){
-        strcpy(new_node->value, aux);
-    }else{
+    if(strcmp(value,"") == 0){
+        new_node->value = (char *) calloc((strlen(value) + 1), sizeof(char));
         strcpy(new_node->value, value);
+    }else {
+        char *aux = helperInsertMap(map, value);
+        new_node->value = (char *) calloc((strlen(aux) + 1), sizeof(char));
+        /*int hashAux = hashFunction(value);
+        char* aux = NULL;
+        if(hashAux != -1)
+            aux = findInMap(&map[hashAux], value);
+        if( aux != NULL && hashAux != -1){
+            strcpy(new_node->value, aux);
+        }else{
+            strcpy(new_node->value, value);
+        }
+         */
+        strcpy(new_node->value, aux);
+        free(aux);
     }
-     */
-    strcpy(new_node->value, aux);
-    free(aux);
     new_node->hashcode = hashcode;
     new_node->next = *head;
     *head = new_node;

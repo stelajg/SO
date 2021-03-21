@@ -1,6 +1,6 @@
 #include "main.h"
 
-int getline(char** text, size_t* size, FILE* fd_src){
+int readline(char** text, size_t* size, FILE* fd_src){
     char* error;
     if((*text) != NULL){
         free(*text);
@@ -139,7 +139,7 @@ void helperAnalyzeFILEInput(FILE* fd_src, HashMap** map, char* text, int* mapSiz
                 size_aux_text += 2;
                 aux_text = (char **)realloc(aux_text, sizeof(char *)*2);
             }
-            getline(&text,&size,fd_src);
+            readline(&text,&size,fd_src);
             aux_text[i] = (char*)calloc(strlen(text) - 1,sizeof(char));
             strncpy(aux_text[i], text, strlen(text) - 1);
             aux_text[i][strlen(text) - 2] = '\0';
@@ -240,7 +240,7 @@ void helperAnalyzerIF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap** 
 	int wasElse = 0;
     free((*text));
 	(*text) = NULL;
-    getline(text,&size,(*fd_src));
+    readline(text,&size,(*fd_src));
     while(strstr((*text), "#endif") == NULL){
         if(if_var == 0 && strstr((*text), "#elif") != NULL){
             if_var = findIfExistsInMap(map,text,0);
@@ -251,9 +251,9 @@ void helperAnalyzerIF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap** 
         }else if(if_var != 0 && wasElse == 0){
             writeFILE(fd_dst,map,keys,(*text), map_size);
         }
-        getline(text,&size,(*fd_src));
+        readline(text,&size,(*fd_src));
     }
-    getline(text,&size,(*fd_src));
+    readline(text,&size,(*fd_src));
 }
 
 void helperAnalyzerIFDEF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap**map, char** keys,
@@ -270,7 +270,7 @@ void helperAnalyzerIFDEF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap
     }
     free((*text));
 	(*text) = NULL;
-    getline(text,&size,(*fd_src));
+    readline(text,&size,(*fd_src));
     
     while(strstr((*text), "#endif") == NULL){
         if(if_var == -1 && strstr((*text), "#elif") != NULL){
@@ -282,9 +282,9 @@ void helperAnalyzerIFDEF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap
         }else if(if_var == 1 && wasElse == 0){
             writeFILE(fd_dst,map,keys,(*text), map_size);
         }
-        getline(text,&size,(*fd_src));
+        readline(text,&size,(*fd_src));
     }
-    getline(text,&size,(*fd_src));
+    readline(text,&size,(*fd_src));
 }
 
 /*void searchInDirectory(char* dir_name, char* fileName){
@@ -352,7 +352,7 @@ void analyzerFileInput(FILE* fd_src, FILE* fd_dst, char * dir_address,HashMap**m
     size_t size = 0;
     size_t read = -1;
 
-    while((read = getline(&text,&size,fd_src)) != - 1){
+    while((read = readline(&text,&size,fd_src)) != - 1){
         if(feof(fd_src))
             break;
         if(readUndef == 1){

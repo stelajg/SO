@@ -6,9 +6,9 @@
 #define lowercaseSubs 97
 
 char** splitInWord(char* text, int* numberOfWords){
-    int i;
+    int i = 0;
 	char ** result = NULL;
-	char *pch;
+	char *pch = NULL;
     while (text[i] != '\0'){
         if(text[i] == ' ')
             (*numberOfWords)++;

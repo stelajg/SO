@@ -1,15 +1,14 @@
 CFLAGS = /MD
 
-build: so-cpp.exe
 
-so-cpp.exe: hashmap.obj main.obj
-	cl $(CFLAGS) /out:so-cpp.exe hashmap.obj main.obj
+build: main.obj hashmap.obj
+	cl $(CFLAGS) /Feso-cpp.exe main.obj hashmap.obj
 
 main.obj: main.c main.h
-	cl $(CFLAGS) /c main.c
+	cl $(CFLAGS) /c /Fomain.obj  main.c
 
 hashmap.obj: hashmap.c hashmap.h
-	cl $(CFLAGS) /c hashmap.c
+	cl $(CFLAGS) /c /Fohashmap.obj hashmap.c
 
 clean:
 	del *.obj

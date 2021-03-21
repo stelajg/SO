@@ -1,11 +1,11 @@
-so-cpp: hashmap.o main.o
-	gcc -std=c89 -o so-cpp hashmap.o main.o
+build: hashmap.o main.o
+	gcc -g main.o hashmap.o -o so-cpp
 
 main.o: main.c main.h
-	gcc -c -o main.o main.c
+	gcc -c main.c
 
 hashmap.o: hashmap.c hashmap.h
-	gcc -c -o hashmap.o hashmap.c
+	gcc -c hashmap.c
 
 clean:
 	rm -fr so-cpp

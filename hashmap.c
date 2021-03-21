@@ -6,14 +6,16 @@
 #define lowercaseSubs 97
 
 char** splitInWord(char* text, int* numberOfWords){
-    int i = 0;
+    int i;
+	char ** result = NULL;
+	char *pch;
     while (text[i] != '\0'){
         if(text[i] == ' ')
             (*numberOfWords)++;
         i++;
     }
-    char**result = (char **)calloc((*numberOfWords),sizeof(char *));
-    char *pch = strtok (text," ");
+	result = (char **)calloc((* numberOfWords), sizeof(char *));
+    pch = strtok (text," ");
     i = 0;
     while(pch != NULL){
         result[i] = (char *)calloc(strlen(pch) + 1,sizeof(char ));
@@ -22,15 +24,14 @@ char** splitInWord(char* text, int* numberOfWords){
         i++;
     }
     return result;
-
 }
 char* helperInsertMap(HashMap** map, char* string_to_analyze){
-    char*result = NULL;
+    char* result = NULL;
     int number_words = 1;
     char** array_words = NULL;
+	int i;
+	size_t resultSize = 0;
     array_words = splitInWord(string_to_analyze,&number_words);
-    int i;
-    size_t resultSize = 0;
     for(i = 0; i < number_words; i++){
         int hashAux = hashFunction(array_words[i]);
         if(hashAux != -1){

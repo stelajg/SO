@@ -3,48 +3,37 @@ Grupă: 336CC
 
 Tema 1
 
-# Tema <NR> TODO
-# Este recomandat să folosiți diacritice
+1. Pentru crearea unui hashMap am folosit un vector de marimea 28 care conținea
+fiecare un nod HashMap. Am ales marimea 28, fiindcă sunt 28 de caractere
+admisibile pentru prima litera/simbol dintr-un macro și am pus impreuna
+majusculele cu minusculele. Apoi, funcția de calcul a  hash codului returnează
+locația în funcție de prima litera. Toate functionalitatile HashMap-ului se 
+afla în fișierele cu același nume și se bazează pe structura de date lista. 
+Anumite functionalitati a listei le-am luat din laboratorul de Structuri de 
+Date din anul 1. Consider ca implementarea este putin naiva, fiindca aproape
+niciodată nu vom avea mai mult de 5-6 define-uri într-un fișier,
+dar cred ca este eficientă din punct de vedere al căutării.
 
-Organizare
--
-1. Explicație pentru structura creată (sau soluția de ansamblu aleasă):
+2. Nu am implementat întreg enunț al temei. Nu am implementat partea cu 
+include. Funcționalitățile lipsa din enunț sunt prezente în ceea ce privește
+argumentele pe care le primește executabilul. La început, mi-a luat mult timp
+sa înțeleg ca fișierul de output poate sa nu existe și să fie output-ul
+la stdout sau dacă avem 2 fișier ca argumente al doilea fișier este de output.
+Pentru fiecare parte pe care trebuia sa o facem, am creat cate o funcție
+aparte și prin numele funcției se subînțelege ce face. Mai mult, la aceasta
+tema am lucrat cu șirurile și toate funcțiile posibile din biblioteca
+string.h, am luat linie cu linie fișierul de input și în urma analizării lor
+am scris în fișierul de output. 
 
-***Obligatoriu:***
-* De făcut referință la abordarea generală menționată în paragraful de mai sus. Aici se pot băga bucăți de cod/funcții - etc.
-* Consideri că tema este utilă?
-* Consideri implementarea naivă, eficientă, se putea mai bine?
+3.Executabilul se rulează cu argumente sau e posibil și fără argumente,
+atunci inputul și outputul vor fi stdin și stdout. Build se face din
+2 fisiere obiect hashmap.o si main.o, care sunt create în urma asamblari
+unde codul din limbajul de asamblare este transformat în cod mașină, 
+avem nevoie de ambele fișiere obiect pentru linkare, deoarece anumite 
+functiuni si structuri din hashmap.c sunt folosite in main.c și pentru
+a identifica simbolurile.
 
-***Opțional:***
-* De menționat cazuri speciale (corner cases), nespecificate în enunț și cum au fost tratate.
+4.Bibliografie
+https://c-for-dummies.com/blog 
+https://www.geeksforgeeks.org/ 
 
-
-Implementare
--
-
-* De specificat dacă întregul enunț al temei e implementat
-* Dacă există funcționalități extra, pe lângă cele din enunț - descriere succintă (maximum 3-4 rânduri/funcționalitate) + motivarea lor (maximum o frază)
-* De specificat funcționalitățile lipsă din enunț (dacă există) și menționat dacă testele reflectă sau nu acest lucru
-* Dificultăți întâmpinate
-* Lucruri interesante descoperite pe parcurs
-
-Cum se compilează și cum se rulează?
--
-* Explicație, ce biblioteci linkează, cum se face build
-* Cum se rulează executabilul, se rulează cu argumente (sau nu)
-
-Bibliografie
--
-
-* Resurse utilizate - toate resursele publice de pe internet/cărți/code snippets, chiar dacă sunt laboratoare de SO
-
-Git
--
-1. Link către repo-ul de git
-
-Ce să **NU**
--
-* Detalii de implementare despre fiecare funcție/fișier în parte
-* Fraze lungi care să ocolească subiectul în cauză
-* Răspunsuri și idei neargumentate
-* Comentarii și *TODO*-uri

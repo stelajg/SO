@@ -111,8 +111,6 @@ void parseInputArgs(char **argv, int argc, HashMap **map, char **fd_src_address,
 }
 
 void helperAnalyzeDefine(FILE *fd_src, HashMap **map, char *text, int *mapSize) {
-    /*aici trebuie de revizuit, poate sa alegi
-     * doar alphanumeri+simboluri, ai prea multe spatii,exercitiu 12*/
     char *aux;
     char *aux1;
     char *key;

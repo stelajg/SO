@@ -112,11 +112,7 @@ void parseInputArgs(char** argv, int argc, HashMap** map, char** fd_src_address,
     }
 }
 
-void helperAnalyzeFILEInput(FILE* fd_src, HashMap** map, char* text, int* mapSize){
-    /*pch = strtok (text," \n");
-    pch = strtok (NULL, " \n");
-    int hashcode = hashFunction(pch);
-     */
+void helperAnalyzeDefine(FILE* fd_src, HashMap** map, char* text, int* mapSize){
     /*aici trebuie de revizuit, poate sa alegi doar alphanumeri+simboluri, ai prea multe spatii,exercitiu 12*/
 	char* aux;
 	char* aux1;
@@ -175,7 +171,7 @@ void writeFILE(FILE* dst, HashMap** map, char**keys, char* text, int map_size){
     int isInAQuote = 0;
     for(i = 0; i < map_size; i++){
         char *find = strstr(text, keys[i]);
-        if( find != NULL){
+        while ( find != NULL){
             char *findQuote = strchr(find, '"');
             if(findQuote != NULL){
                 char *findSecondQuote  = strchr(findQuote + 1, '"');
@@ -194,6 +190,8 @@ void writeFILE(FILE* dst, HashMap** map, char**keys, char* text, int map_size){
                 free(aux);
                 wasFound = 1;
             }
+            find = strstr(find + 1, keys[i]);
+            isInAQuote = 0;
         }
     }
     if(wasFound == 0){
@@ -208,7 +206,7 @@ void deleteKeys(HashMap**map, char* text){
     deleteNode(&map[hashFunction(pch)], pch);
 }
 
-long int findIfExistsInMap(HashMap** map, char** text, int isForIfdef){
+long findIfExistsInMap(HashMap** map, char** text, int isForIfdef){
     char * pch;
 	long int if_var;
 	char* cEnd;
@@ -234,34 +232,12 @@ long int findIfExistsInMap(HashMap** map, char** text, int isForIfdef){
     return if_var;
 }
 
-void helperAnalyzerIF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap** map, char** keys, int map_size){
-    long int if_var = findIfExistsInMap(map,text,0);
-    size_t size = 0;
-	int wasElse = 0;
-    free((*text));
-	(*text) = NULL;
-    readline(text,&size,(*fd_src));
-    while(strstr((*text), "#endif") == NULL){
-        if(if_var == 0 && strstr((*text), "#elif") != NULL){
-            if_var = findIfExistsInMap(map,text,0);
-        }else if(strstr((*text), "#else") != NULL){
-            wasElse = 1;
-        }else if(wasElse == 1 && if_var == 0){
-            writeFILE(fd_dst,map,keys,(*text), map_size);
-        }else if(if_var != 0 && wasElse == 0){
-            writeFILE(fd_dst,map,keys,(*text), map_size);
-        }
-        readline(text,&size,(*fd_src));
-    }
-    readline(text,&size,(*fd_src));
-}
-
 void helperAnalyzerIFDEF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap**map, char** keys,
-                                                                                            int map_size, int forIfndef){
+                               int *map_size, int forIfndef, int isForIfdef){
     int wasElse = 0;
 	size_t size = 0;
-	long int if_var = findIfExistsInMap(map,text,1);
-    if(forIfndef == 1){
+	long int if_var = findIfExistsInMap(map,text,isForIfdef);
+    if(forIfndef == 1 && isForIfdef == 1){
         if(if_var == -1){
             if_var = 1;
         }else{
@@ -271,16 +247,20 @@ void helperAnalyzerIFDEF_ENDIF(FILE** fd_src, FILE* fd_dst, char** text, HashMap
     free((*text));
 	(*text) = NULL;
     readline(text,&size,(*fd_src));
-    
     while(strstr((*text), "#endif") == NULL){
-        if(if_var == -1 && strstr((*text), "#elif") != NULL){
-            if_var = findIfExistsInMap(map,text,1);
+        if(isForIfdef == 1 && strstr((*text), "#define") != NULL){
+            helperAnalyzeDefine((*fd_src), map, (*text), map_size);
+        }else if(strstr((*text), "#elif") != NULL){
+            if((isForIfdef == 1 && if_var == -1) || (isForIfdef==0 && if_var == 0 ))
+                if_var = findIfExistsInMap(map,text,isForIfdef);
         }else if(strstr((*text), "#else") != NULL){
             wasElse = 1;
-        }else if(wasElse == 1 && if_var == -1){
-            writeFILE(fd_dst,map,keys,(*text), map_size);
-        }else if(if_var == 1 && wasElse == 0){
-            writeFILE(fd_dst,map,keys,(*text), map_size);
+        }else if(wasElse == 1){
+            if((isForIfdef == 1 && if_var == -1) || (isForIfdef==0 && if_var == 0 ))
+                writeFILE(fd_dst,map,keys,(*text), (*map_size));
+        }else if(wasElse == 0){
+            if((isForIfdef == 1 && if_var == 1) || (isForIfdef==0 && if_var != 0 ))
+                writeFILE(fd_dst,map,keys,(*text), (*map_size));
         }
         readline(text,&size,(*fd_src));
     }
@@ -364,12 +344,12 @@ void analyzerFileInput(FILE* fd_src, FILE* fd_dst, char * dir_address,HashMap**m
             helperAnalyzerInclude(fd_dst,text,dir_address,map,map_size);
         }
         else if(strstr(text, "#ifndef") != NULL){
-            helperAnalyzerIFDEF_ENDIF(&fd_src,fd_dst,&text,map,keys,map_size,1);
+            helperAnalyzerIFDEF_ENDIF(&fd_src,fd_dst,&text,map,keys,&map_size,1, 1);
         }else if(strstr(text, "#ifdef") != NULL){
-            helperAnalyzerIFDEF_ENDIF(&fd_src,fd_dst,&text,map,keys,map_size,0);
+            helperAnalyzerIFDEF_ENDIF(&fd_src,fd_dst,&text,map,keys,&map_size,0, 1);
         }
         else if(strstr(text, "#define") != NULL){
-            helperAnalyzeFILEInput(fd_src, map, text, &map_size);
+            helperAnalyzeDefine(fd_src, map, text, &map_size);
         }else if(strstr(text, "#undef") != NULL){
             deleteKeys(map,text);
             for(i = 0; i < map_size; i++){
@@ -380,7 +360,8 @@ void analyzerFileInput(FILE* fd_src, FILE* fd_dst, char * dir_address,HashMap**m
             map_size--;
             readUndef = 1;
         }else if(strstr(text, "#if") != NULL){
-            helperAnalyzerIF_ENDIF(&fd_src,fd_dst,&text,map,keys,map_size);
+            helperAnalyzerIFDEF_ENDIF(&fd_src,fd_dst,&text,map,keys,&map_size,0, 0);
+
         }else if(readKeys == 0){
             readKeys = 1;
             keys = getKeys(map, MapSize,map_size);
